@@ -1,211 +1,99 @@
-add the benchmarking feature and slack integration and github issue integration and dashboard 
-
-
-### AI Business Helper Chatbot for Business Owners
-
-- Problem Statement [[Click Here](/PS.md)]
-
----
-Note: Make sure to have a `.env` in `./agent_code` folder which container the db url
-```bash
-DATABASE_URL=postgresql://admin:root@postgres_db:5432/test_db
-```
-
----
-DOCKER COMPOSE ENDPOINTS
-- postgres  
-   - POSTGRES USER: `admin`  
-   - POSTGRES PASSWORD: `root`  
-   - POSTGRES DEFAULT DB: `test_db`  
-   - POSTGRES PORT: `5432`  
-
-- pg-admin(for db-UI)  
-   - PGADMIN DEFAULT EMAIL: `mohitmolela@gmail.com`  
-   - PGADMIN DEFAULT PASSWORD: `root`  
-   - PORTS: `5050`  
-
-- landing-page(frontend)  
-   - PORT: `5173`  
-   - VITE_API_URL=`http://localhost:8000`  
-   - DATABASE_URL=`postgresql://admin:root@db:5432/test_db`  
-   - ENCRYPTION_SECRET=`12345678901234567890123456789012`  
-   - NEXTAUTH_URL=`http://localhost:5173`  
-   - NEXT_PUBLIC_VIEWER_URL=`http://localhost:5173`  
-
-- Flask Agent  
-   - PORT: `8000`  
-
-- loki  
-   - PORT: `3100`  
-
-- grafana  
-   - PORT: `3000`  
----
-
-# AI Business Helper Chatbot – Database Setup Instructions
-
-<!-- # Database Setup Instructions -->
-
-## Step 1: Start PostgreSQL Container
-
-Run the following command to start your Docker services:
-
-```bash
-docker compose up -d
-```
-
-This starts the PostgreSQL container in detached mode.
-
-verify that it is running:
-
-```bash
-docker ps
-```
-
-Ensure PostgreSQL is running and mapped to port **5432**.
+<div align="center">
+  <h1>🚀 ProfitPilot (Intelligent Business Agent)</h1>
+  <p><strong><em>Your AI Business Partner that Thinks Before You Act.</em></strong></p>
+</div>
 
 ---
 
-## Step 2: Verify PostgreSQL Is Ready
+## 💡 The Problem
+Small business owners have to make countless decisions daily: pricing, marketing budgets, hiring, and expansion. Usually, these decisions are made based on **guesswork, emotion, or pressure** because their data is scattered across spreadsheets, notebooks, and various apps. 
 
-(Optional but recommended)
+The tragic result? **Wasted money, cash flow crises, and stressful stagnation.** 
 
-Check container logs:
+*There currently exists no system that simply says: "Stop, this decision is risky" before an owner makes a mistake.*
 
-```bash
-docker logs <postgres-container-name>
-```
+## 🌟 Our Solution
+**ProfitPilot** is not just a chatbot—it’s an **AI-powered Business Partner** tailored for small to medium enterprises. 
 
-You should see a message like:
+By unifying all an owner's financial, operational, and performance data, our AI analyzes the current situation and provides real-time, human-like advice. Before a business owner executes a potentially harmful decision, ProfitPilot evaluates it, provides a **Business Health Score**, and issues proactive warnings.
 
-```
-database system is ready to accept connections
-```
-
----
-
-## Step 3: Access the PostgreSQL Container
-
-First, list all containers:
-
-```bash
-docker ps -a
-```
-
-Then access the PostgreSQL container:
-
-```bash
-docker exec -it <container-name-or-id> /bin/bash
-```
+### Why ProfitPilot Wins 🏆
+- **Preventative Intelligence:** Instead of retroactive analytics, we offer **preventative advice**. (e.g., "⚠️ *Risky: You only have enough cash flow for 40 days, wait on that $3k ad spend.*")
+- **Omnichannel Access:** Talk to your business directly via a **Dashboard**, **Personal WhatsApp Number**, or **Telegram**.
+- **Agentic Workflows:** Powered by a deeply integrated LangGraph and LLM backend connecting directly to your live SQL databases, Grafana metrics, and daily logs.
+- **Dynamic Dashboard:** A rich Next.js dashboard that visualizes the AI's insights, generates full markdown reports, and acts on recommendations.
 
 ---
 
-## Step 4: Create the Database
-
-Before applying the schema, ensure the database exists.
-
-Inside the container:
-
-```bash
-psql -U <user>
-```
-
-Create the database:
-
-```sql
-CREATE DATABASE <database-name>;
-```
-
-Exit:
-
-```bash
-\q
-```
+## ✨ Key Features
+1. **Understand The Business:** AI stores past decisions, current metrics (sales, expenses, profit), and live problems to retain full context.
+2. **"Before-Action" Checks:** Type in a planned action, and get a clear response:  ✅ Safe | ⚠️ Risky | ❌ Do Not Proceed.
+3. **Health Dashboard & Monitoring:** A unified interface scoring overall business health, highlighting metrics like revenue vs. expenses, employee stats, and live alerts.
+4. **WhatsApp & Telegram Bots:** Real-time conversational interface proxying right into our Flask backend for mobile, on-the-go decisions.
+5. **Continuous Threat Warning:** Automatically flags runaway expenses and dangerous cash flow trends.
 
 ---
 
-## Step 5: Copy Schema File into the Container
-
-From your host machine:
-
-```bash
-docker cp path/to/host/machine/company_db_schema.sql <container-name>:/company_db_schema.sql
-```
-
----
-
-## Step 6: Copy Data File into the Container
-
-```bash
-docker cp path/to/host/machine/inserts.sql <container-name>:/inserts.sql
-```
+## 🛠 Tech Stack
+- **Frontend & Dashboard:** Next.js (Standalone), React, Tailwind CSS, Vite (TanStack for Landing Page).
+- **Agentic Backend:** Python, Flask, LangGraph, Ollama (LLM orchestration).
+- **Database:** PostgreSQL (with `pgAdmin` for UI management), SQLite (for chat history).
+- **Observability:** Prometheus, Grafana Loki, Promtail (for real-time metrics and logs).
+- **Gateways:** `whatsapp-web.js` (Custom WhatsApp integration without official Cloud API costs).
 
 ---
 
-## Step 7: Apply the Schema
+## 🚀 Getting Started
 
-Inside the container:
+### Prerequisites
+- [Docker](https://www.docker.com/) & Docker Compose installed.
+- [Ollama](https://ollama.ai/) installed locally and running `llama3.2:3b`.
 
+### 1. Environment Variables Configuration
+In the `agent_code` directory, ensure you have an `.env` file with the following database connection string:
 ```bash
-psql -U <user> -d <database-name> -f ./company_db_schema.sql
+DATABASE_URL=postgresql://admin:root@db:5432/test_db
 ```
 
-This creates all tables and database structures.
+### 2. Boot up the Ecosystem
+Clone the repository and instantly spin up the entire multi-container environment:
+```bash
+docker compose up -d --build
+```
+*This spins up PostgreSQL, pgAdmin, the Next.js Dashboard, the Vite Landing Page, the Flask Agent, Prometheus, Loki, and Grafana.*
+
+### 3. Database Initialization
+Once the containers are running, you need to seed the database with the schema and initial AI test data.
+
+1. **Copy Schema & Data to Postgres Container:**
+   ```bash
+   docker cp company_db_schema.sql <postgres_container_name>:/company_db_schema.sql
+   docker cp inserts.sql <postgres_container_name>:/inserts.sql
+   ```
+2. **Execute the SQL scripts inside the container:**
+   ```bash
+   docker exec -it <postgres_container_name> psql -U admin -d test_db -f /company_db_schema.sql
+   docker exec -it <postgres_container_name> psql -U admin -d test_db -f /inserts.sql
+   ```
+   *(Ensure to replace `<postgres_container_name>` with your actual running `db` container name, usually `intelligent-business-agent-db-1`)*.
+
+### 4. Access the Ecosystem
+- **Landing Page & Onboarding:** `http://localhost:5173`
+- **Next.js Dashboard:** `http://localhost:3001` *(Your main hub)*
+- **Agent Backend API:** `http://localhost:5000`
+- **Postgres UI (pgAdmin):** `http://localhost:5050` (Email: `mohitmolela@gmail.com` / Pass: `root`)
+- **Grafana Metrics:** `http://localhost:3000`
 
 ---
 
-## Step 8: Insert Initial Data
-
-```bash
-psql -U <user> -d <database-name> -f ./inserts.sql
-```
-
-This populates the tables with initial records.
-
----
-
-## Step 9: Connect to the Database
-
-To manually access the database:
-
-```bash
-psql -U <user> -d <database-name>
-```
+## 📱 Integration Guides
+We support extensive messaging integrations so you can ask business questions from anywhere! 
+Refer to the dedicated documentation for setup:
+- [WhatsApp Setup Guide](./WHATSAPP_INTEGRATION_GUIDE.md)
+- [Telegram Setup Guide](./TELEGRAM_INTEGRATION_GUIDE.md)
+- [Full Project Architecture Context](./PROJECT_CONTEXT.md)
 
 ---
 
-## Step 10: Verify Setup
+**Built to give Small Business Owners peace of mind and data-driven confidence.** 💡
 
-Inside PostgreSQL CLI:
-
-List tables:
-
-```bash
-\dt
-```
-
-List databases:
-
-```bash
-\l
-```
-
-Describe a table:
-
-```bash
-\d <table-name>
-```
-
-# Setup Flow Summary
-
-1. Start Docker container
-2. Verify PostgreSQL is running
-3. Create database
-4. Copy schema and data files
-5. Execute schema
-6. Insert data
-7. Verify tables
-
----
-
-Your PostgreSQL database should now be fully set up and ready for use.
