@@ -1,0 +1,148 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: test_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:9
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: mohitmolela@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+
+  landing-page:
+    build:
+      context: ./landing-page
+      dockerfile: Dockerfile
+    container_name: landing-page
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./landing-page:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://backend:5000
+      - DATABASE_URL=postgresql://admin:root@db:5432/test_db
+      - ENCRYPTION_SECRET=12345678901234567890123456789012
+      - NEXTAUTH_URL=http://localhost:5173
+      - NEXT_PUBLIC_VIEWER_URL=http://localhost:5173
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+    depends_on:
+      - backend
+      - db
+    stdin_open: true
+    tty: true
+
+  backend:
+    build:
+      context: ./agent_code
+      dockerfile: Dockerfile
+    container_name: backend
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./agent_code:/app
+      - ./logs:/app/logs
+    env_file:
+      - ./.env
+    environment:
+      - PROMETHEUS_URL=http://prometheus:9090
+    depends_on:
+      - db
+
+  whatsapp-gateway:
+    build:
+      context: ./whatsapp_gateway
+      dockerfile: Dockerfile
+    container_name: whatsapp_gateway
+    hostname: whatsapp-gateway
+    shm_size: '256mb'
+    restart: unless-stopped
+    environment:
+      - BACKEND_URL=http://backend:5000
+      - MY_WHATSAPP_NUMBER=917976127452
+    volumes:
+      - wwebjs_auth:/app/.wwebjs_auth
+    depends_on:
+      - backend
+    stdin_open: true
+    tty: true
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+      args:
+        AGENT_API_URL: http://backend:5000
+        NEXT_PUBLIC_LANDING_URL: http://localhost:5173
+    container_name: nextjs-dashboard
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - AGENT_API_URL=http://backend:5000
+      - NEXT_PUBLIC_LANDING_URL=http://localhost:5173
+    depends_on:
+      - backend
+      - db
+
+  # Promtail and Loki configuration
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: loki
+    ports:
+      - "3100:3100"
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: promtail
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - ./logs:/var/log/app
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - loki
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+    depends_on:
+      - backend
+      - dashboard
+
+volumes:
+  pgdata:
+  prometheus_data:
