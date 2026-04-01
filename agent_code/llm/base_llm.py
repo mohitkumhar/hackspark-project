@@ -6,6 +6,7 @@ from logger.logger import logger
 load_dotenv()
 
 openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+
 if not openrouter_api_key:
     raise ValueError("OPENROUTER_API_KEY is required (set in environment or .env).")
 
